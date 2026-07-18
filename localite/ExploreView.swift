@@ -9,7 +9,7 @@ struct ExploreView: View {
     var body: some View {
         ZStack(alignment: .top) {
             ZStack(alignment: .bottomTrailing) {
-                MapViewRepresentable(region: $viewModel.region, journey: viewModel.currentJourney)
+                MapViewRepresentable(region: $viewModel.region, journey: viewModel.currentJourney, viewModel: viewModel, showingPNREntry: $showingPNREntry)
                     .ignoresSafeArea(edges: .top)
                 
                 // Search button to bring back the PNR sheet if it was closed
@@ -31,7 +31,7 @@ struct ExploreView: View {
             .sheet(isPresented: $showingPNREntry) {
                 if #available(iOS 16.0, *) {
                     PNREntryView(viewModel: viewModel, detent: $sheetDetent)
-                        .presentationDetents([.height(200), .medium, .large], selection: $sheetDetent)
+                        .presentationDetents([.height(190), .medium, .large], selection: $sheetDetent)
                         .presentationBackgroundInteraction(.enabled(upThrough: .medium))
                         .interactiveDismissDisabled()
                 } else {
@@ -39,13 +39,29 @@ struct ExploreView: View {
                     PNREntryView(viewModel: viewModel, detent: .constant(.medium))
                 }
             }
+            .sheet(item: $viewModel.selectedStation) { station in
+                if #available(iOS 16.0, *) {
+                    TopPicksView(station: station)
+                        .presentationDetents([.medium, .large])
+                        .presentationDragIndicator(.visible)
+                } else {
+                    TopPicksView(station: station)
+                }
+            }
         }
     }
+}
+
+// Custom annotation to hold the station object
+class StationAnnotation: MKPointAnnotation {
+    var station: Station?
 }
 
 struct MapViewRepresentable: UIViewRepresentable {
     @Binding var region: MKCoordinateRegion
     var journey: Journey?
+    @ObservedObject var viewModel: ExploreViewModel
+    @Binding var showingPNREntry: Bool
     
     func makeUIView(context: Context) -> MKMapView {
         let mapView = MKMapView()
@@ -70,9 +86,10 @@ struct MapViewRepresentable: UIViewRepresentable {
             
             // Add Annotations
             for station in journey.stations {
-                let annotation = MKPointAnnotation()
+                let annotation = StationAnnotation()
                 annotation.coordinate = station.coordinate
                 annotation.title = station.name
+                annotation.station = station
                 uiView.addAnnotation(annotation)
             }
         }
@@ -97,6 +114,21 @@ struct MapViewRepresentable: UIViewRepresentable {
                 return renderer
             }
             return MKOverlayRenderer(overlay: overlay)
+        }
+        
+        func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
+            if let annotation = view.annotation as? StationAnnotation, let station = annotation.station {
+                // Deselect so it can be selected again later
+                mapView.deselectAnnotation(annotation, animated: true)
+                
+                // Hide the PNR sheet so it doesn't conflict with the Top Picks sheet
+                parent.showingPNREntry = false
+                
+                // Wait briefly for the first sheet to dismiss before triggering the new one
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                    self.parent.viewModel.selectedStation = station
+                }
+            }
         }
     }
 }

@@ -32,6 +32,7 @@ struct PNREntryView: View {
                     Button(action: {
                         viewModel.searchJourney()
                         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                        // Removed dismiss() here so the user can scroll up to see the station list!
                     }) {
                         Image(systemName: "checkmark")
                             .foregroundColor(viewModel.isValidPNR ? .white : .gray.opacity(0.5))

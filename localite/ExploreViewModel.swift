@@ -7,6 +7,7 @@ import SwiftUI
 class ExploreViewModel: ObservableObject {
     @Published var pnrInput: String = ""
     @Published var currentJourney: Journey?
+    @Published var selectedStation: Station?
     @Published var region: MKCoordinateRegion = MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 20.5937, longitude: 78.9629), // Center of India
         span: MKCoordinateSpan(latitudeDelta: 30.0, longitudeDelta: 30.0)
