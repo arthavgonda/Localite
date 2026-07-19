@@ -1,23 +1,20 @@
-//
-//  Localitem.swift
-//  localite
-//
-//  Created by ANOOP on 18/07/26.
-//
-
 import SwiftUI
 
 enum LocalCategory: String, CaseIterable, Identifiable {
     case all = "All"
     case fruits = "Fruits"
+    case vegetables = "Vegetables"
     case handicrafts = "Handicrafts"
 
     var id: String { rawValue }
+
+    static let browsable: [LocalCategory] = [.fruits, .vegetables, .handicrafts]
 
     var icon: String {
         switch self {
         case .all: return "square.grid.2x2.fill"
         case .fruits: return "leaf.fill"
+        case .vegetables: return "carrot.fill"
         case .handicrafts: return "hammer.fill"
         }
     }
@@ -30,145 +27,384 @@ struct Product: Identifiable, Equatable {
     let originalPrice: String?
     let imageSeed: String
     let discountPercent: Int?
+    let category: LocalCategory
+    let originVillage: String
+    let rating: Double
+    let ratingCount: String
+    let etaText: String
+    let discountBadge: String?
+    let description: String
+    let distance: String
 
     static func == (lhs: Product, rhs: Product) -> Bool {
         lhs.id == rhs.id
     }
 }
 
-struct Seller: Identifiable, Equatable {
-    let id = UUID()
-    let name: String
-    let category: LocalCategory
+struct SeasonalHighlight: Identifiable {
+    var id: UUID { product.id }
+    let badge: String
+    let title: String
+    let subtitle: String
     let imageSeed: String
+    let category: LocalCategory
     let rating: Double
     let ratingCount: String
-    let feeText: String
-    let etaText: String
-    let discountBadge: String?
-    let description: String
-    let distance: String
-    let products: [Product]
-
-    static func == (lhs: Seller, rhs: Seller) -> Bool {
-        lhs.id == rhs.id
-    }
-}
-
-struct PopularHighlight: Identifiable {
-    let id = UUID()
+    let windowLabel: String
+    let windowValue: String
+    let priceLabel: String
+    let priceValue: String
     let product: Product
-    let seller: Seller
 }
 
 enum LocalStore {
-    static let sellers: [Seller] = [
-        Seller(
-            name: "Ravi's Orchard",
+    static let products: [Product] = [
+        Product(
+            name: "Alphonso Mangoes",
+            price: "₹180",
+            originalPrice: "₹230",
+            imageSeed: "mangoes",
+            discountPercent: 22,
             category: .fruits,
-            imageSeed: "orchard-mango-01",
+            originVillage: "Malihabad, Uttar Pradesh",
             rating: 4.9,
             ratingCount: "1.2k",
-            feeText: "From ₹40",
             etaText: "20-30 min",
             discountBadge: "Up to 25% off mangoes this week",
-            description: "A third-generation family orchard on the outskirts of the city, growing Alphonso and Kesar mangoes without cold storage. Everything is picked the same morning it's listed.",
-            distance: "0.4 km",
-            products: [
-                Product(name: "Alphonso Mangoes (1kg)", price: "₹180", originalPrice: "₹230", imageSeed: "mango-01", discountPercent: 22),
-                Product(name: "Kesar Mangoes (1kg)", price: "₹150", originalPrice: nil, imageSeed: "mango-02", discountPercent: nil),
-                Product(name: "Raw Mango Pickle", price: "₹120", originalPrice: nil, imageSeed: "pickle-01", discountPercent: nil)
-            ]
+            description: "Grown on a third-generation family orchard on the outskirts of the city, without cold storage. Everything is picked the same morning it's listed.",
+            distance: "0.4 km"
         ),
-        Seller(
-            name: "Meera's Studio",
-            category: .handicrafts,
-            imageSeed: "pottery-studio-01",
-            rating: 4.8,
-            ratingCount: "860",
-            feeText: "From ₹60",
-            etaText: "30-40 min",
-            discountBadge: "Festive season, 15% off pottery",
-            description: "Hand-thrown blue pottery glazed with cobalt and quartz, fired in a wood kiln using techniques passed down since the Mughal era.",
-            distance: "1.1 km",
-            products: [
-                Product(name: "Blue Pottery Bowl Set", price: "₹950", originalPrice: "₹1,120", imageSeed: "pottery-01", discountPercent: 15),
-                Product(name: "Hand-painted Vase", price: "₹1,200", originalPrice: nil, imageSeed: "pottery-02", discountPercent: nil),
-                Product(name: "Ceramic Coasters (Set of 4)", price: "₹450", originalPrice: nil, imageSeed: "pottery-03", discountPercent: nil)
-            ]
-        ),
-        Seller(
-            name: "Grove Fresh",
+        Product(
+            name: "Kesar Mangoes",
+            price: "₹150",
+            originalPrice: nil,
+            imageSeed: "kesar_mango",
+            discountPercent: nil,
             category: .fruits,
-            imageSeed: "lychee-grove-01",
+            originVillage: "Malihabad, Uttar Pradesh",
+            rating: 4.9,
+            ratingCount: "1.2k",
+            etaText: "20-30 min",
+            discountBadge: nil,
+            description: "Grown on a third-generation family orchard on the outskirts of the city, without cold storage. Everything is picked the same morning it's listed.",
+            distance: "0.4 km"
+        ),
+        Product(
+            name: "Raw Mango Pickle",
+            price: "₹120",
+            originalPrice: nil,
+            imageSeed: "raw_mango_pickle",
+            discountPercent: nil,
+            category: .fruits,
+            originVillage: "Malihabad, Uttar Pradesh",
+            rating: 4.9,
+            ratingCount: "1.2k",
+            etaText: "20-30 min",
+            discountBadge: nil,
+            description: "Grown on a third-generation family orchard on the outskirts of the city, without cold storage. Everything is picked the same morning it's listed.",
+            distance: "0.4 km"
+        ),
+        Product(
+            name: "Shahi Lychee",
+            price: "₹220",
+            originalPrice: nil,
+            imageSeed: "shahi-litchi",
+            discountPercent: nil,
+            category: .fruits,
+            originVillage: "Muzaffarpur, Bihar",
             rating: 4.7,
             ratingCount: "540",
-            feeText: "From ₹35",
             etaText: "15-25 min",
             discountBadge: nil,
             description: "Small-batch shahi lychees with a delicate rose fragrance, hand-picked to preserve the thin, blushing skin.",
-            distance: "0.8 km",
-            products: [
-                Product(name: "Shahi Lychee (1kg)", price: "₹220", originalPrice: nil, imageSeed: "lychee-01", discountPercent: nil),
-                Product(name: "Lychee Juice (1L)", price: "₹140", originalPrice: nil, imageSeed: "juice-01", discountPercent: nil)
-            ]
+            distance: "0.8 km"
         ),
-        Seller(
-            name: "Ganga Looms",
-            category: .handicrafts,
-            imageSeed: "silk-loom-01",
-            rating: 5.0,
-            ratingCount: "312",
-            feeText: "From ₹80",
-            etaText: "40-50 min",
-            discountBadge: nil,
-            description: "Pure silk stoles woven on a traditional pit loom, with hand-tied zari borders that take nearly two days to complete.",
-            distance: "2.3 km",
-            products: [
-                Product(name: "Hand-loom Silk Stole", price: "₹1,450", originalPrice: nil, imageSeed: "silk-01", discountPercent: nil),
-                Product(name: "Zari Border Dupatta", price: "₹1,900", originalPrice: "₹2,200", imageSeed: "silk-02", discountPercent: 14)
-            ]
-        ),
-        Seller(
-            name: "Valley Fresh Market",
+        Product(
+            name: "Lychee Juice",
+            price: "₹140",
+            originalPrice: nil,
+            imageSeed: "litchi_juice",
+            discountPercent: nil,
             category: .fruits,
-            imageSeed: "apple-valley-01",
+            originVillage: "Muzaffarpur, Bihar",
+            rating: 4.7,
+            ratingCount: "540",
+            etaText: "15-25 min",
+            discountBadge: nil,
+            description: "Small-batch shahi lychees with a delicate rose fragrance, hand-picked to preserve the thin, blushing skin.",
+            distance: "0.8 km"
+        ),
+        Product(
+            name: "Kashmiri Apples",
+            price: "₹160",
+            originalPrice: "₹190",
+            imageSeed: "kashmiri_apples",
+            discountPercent: 16,
+            category: .fruits,
+            originVillage: "Shopian, Kashmir",
             rating: 4.8,
             ratingCount: "970",
-            feeText: "From ₹45",
             etaText: "25-35 min",
             discountBadge: "Weekend apple sale",
             description: "Crisp, cold-stored Kashmiri apples with a deep red blush, grown in the high altitude orchards of the Shopian valley.",
-            distance: "2.0 km",
-            products: [
-                Product(name: "Kashmiri Apples (1kg)", price: "₹160", originalPrice: "₹190", imageSeed: "apple-01", discountPercent: 16),
-                Product(name: "Apple Cider (500ml)", price: "₹130", originalPrice: nil, imageSeed: "cider-01", discountPercent: nil)
-            ]
+            distance: "2.0 km"
         ),
-        Seller(
-            name: "Moradabad Metalworks",
+        Product(
+            name: "Apple Cider",
+            price: "₹130",
+            originalPrice: nil,
+            imageSeed: "apple_cider",
+            discountPercent: nil,
+            category: .fruits,
+            originVillage: "Shopian, Kashmir",
+            rating: 4.8,
+            ratingCount: "970",
+            etaText: "25-35 min",
+            discountBadge: nil,
+            description: "Crisp, cold-stored Kashmiri apples with a deep red blush, grown in the high altitude orchards of the Shopian valley.",
+            distance: "2.0 km"
+        ),
+        Product(
+            name: "Organic Spinach",
+            price: "₹40",
+            originalPrice: nil,
+            imageSeed: "spinach-01",
+            discountPercent: nil,
+            category: .vegetables,
+            originVillage: "Sonipat, Haryana",
+            rating: 4.8,
+            ratingCount: "690",
+            etaText: "15-25 min",
+            discountBadge: "Fresh greens, cut this morning",
+            description: "A no-spray kitchen garden supplying leafy greens and seasonal vegetables, harvested at dawn and delivered the same day.",
+            distance: "0.6 km"
+        ),
+        Product(
+            name: "Farm Tomatoes",
+            price: "₹60",
+            originalPrice: "₹75",
+            imageSeed: "tomato-01",
+            discountPercent: 20,
+            category: .vegetables,
+            originVillage: "Sonipat, Haryana",
+            rating: 4.8,
+            ratingCount: "690",
+            etaText: "15-25 min",
+            discountBadge: nil,
+            description: "A no-spray kitchen garden supplying leafy greens and seasonal vegetables, harvested at dawn and delivered the same day.",
+            distance: "0.6 km"
+        ),
+        Product(
+            name: "Toor Dal",
+            price: "₹140",
+            originalPrice: nil,
+            imageSeed: "dal-01",
+            discountPercent: nil,
+            category: .vegetables,
+            originVillage: "Sonipat, Haryana",
+            rating: 4.8,
+            ratingCount: "690",
+            etaText: "15-25 min",
+            discountBadge: nil,
+            description: "A no-spray kitchen garden supplying leafy greens and seasonal vegetables, harvested at dawn and delivered the same day.",
+            distance: "0.6 km"
+        ),
+        Product(
+            name: "Yellow Moong Dal",
+            price: "₹130",
+            originalPrice: nil,
+            imageSeed: "moong-01",
+            discountPercent: nil,
+            category: .vegetables,
+            originVillage: "Ludhiana, Punjab",
+            rating: 4.6,
+            ratingCount: "410",
+            etaText: "20-30 min",
+            discountBadge: nil,
+            description: "Sun-dried lentils sourced directly from Punjab mandis, paired with a rotating selection of crisp seasonal vegetables.",
+            distance: "1.3 km"
+        ),
+        Product(
+            name: "Fresh Okra",
+            price: "₹35",
+            originalPrice: nil,
+            imageSeed: "okra-01",
+            discountPercent: nil,
+            category: .vegetables,
+            originVillage: "Ludhiana, Punjab",
+            rating: 4.6,
+            ratingCount: "410",
+            etaText: "20-30 min",
+            discountBadge: nil,
+            description: "Sun-dried lentils sourced directly from Punjab mandis, paired with a rotating selection of crisp seasonal vegetables.",
+            distance: "1.3 km"
+        ),
+        Product(
+            name: "Blue Pottery Bowl Set",
+            price: "₹950",
+            originalPrice: "₹1,120",
+            imageSeed: "blue_pttoery_bowl_set",
+            discountPercent: 15,
             category: .handicrafts,
-            imageSeed: "brass-work-01",
+            originVillage: "Jaipur, Rajasthan",
+            rating: 4.8,
+            ratingCount: "860",
+            etaText: "30-40 min",
+            discountBadge: "Festive season, 15% off pottery",
+            description: "Hand-thrown blue pottery glazed with cobalt and quartz, fired in a wood kiln using techniques passed down since the Mughal era.",
+            distance: "1.1 km"
+        ),
+        Product(
+            name: "Hand-painted Vase",
+            price: "₹1,200",
+            originalPrice: nil,
+            imageSeed: "hand_painted_vase",
+            discountPercent: nil,
+            category: .handicrafts,
+            originVillage: "Jaipur, Rajasthan",
+            rating: 4.8,
+            ratingCount: "860",
+            etaText: "30-40 min",
+            discountBadge: nil,
+            description: "Hand-thrown blue pottery glazed with cobalt and quartz, fired in a wood kiln using techniques passed down since the Mughal era.",
+            distance: "1.1 km"
+        ),
+        Product(
+            name: "Ceramic Coasters (Set of 4)",
+            price: "₹450",
+            originalPrice: nil,
+            imageSeed: "ceramic_coaster",
+            discountPercent: nil,
+            category: .handicrafts,
+            originVillage: "Jaipur, Rajasthan",
+            rating: 4.8,
+            ratingCount: "860",
+            etaText: "30-40 min",
+            discountBadge: nil,
+            description: "Hand-thrown blue pottery glazed with cobalt and quartz, fired in a wood kiln using techniques passed down since the Mughal era.",
+            distance: "1.1 km"
+        ),
+        Product(
+            name: "Hand-loom Silk Stole",
+            price: "₹1,450",
+            originalPrice: nil,
+            imageSeed: "handloom_silk_stole",
+            discountPercent: nil,
+            category: .handicrafts,
+            originVillage: "Varanasi, Uttar Pradesh",
+            rating: 5.0,
+            ratingCount: "312",
+            etaText: "40-50 min",
+            discountBadge: nil,
+            description: "Pure silk stoles woven on a traditional pit loom, with hand-tied zari borders that take nearly two days to complete.",
+            distance: "2.3 km"
+        ),
+        Product(
+            name: "Zari Border Dupatta",
+            price: "₹1,900",
+            originalPrice: "₹2,200",
+            imageSeed: "zari_border_dupatta",
+            discountPercent: 14,
+            category: .handicrafts,
+            originVillage: "Varanasi, Uttar Pradesh",
+            rating: 5.0,
+            ratingCount: "312",
+            etaText: "40-50 min",
+            discountBadge: nil,
+            description: "Pure silk stoles woven on a traditional pit loom, with hand-tied zari borders that take nearly two days to complete.",
+            distance: "2.3 km"
+        ),
+        Product(
+            name: "Brass Diya Set (6 pcs)",
+            price: "₹680",
+            originalPrice: nil,
+            imageSeed: "brass_diya_set",
+            discountPercent: nil,
+            category: .handicrafts,
+            originVillage: "Moradabad, Uttar Pradesh",
             rating: 4.9,
             ratingCount: "410",
-            feeText: "From ₹70",
             etaText: "35-45 min",
             discountBadge: nil,
             description: "Hand-cast brass diyas with etched floral motifs, polished by hand and finished with a protective lacquer coat.",
-            distance: "1.4 km",
-            products: [
-                Product(name: "Brass Diya Set (6 pcs)", price: "₹680", originalPrice: nil, imageSeed: "brass-01", discountPercent: nil),
-                Product(name: "Engraved Brass Tray", price: "₹1,050", originalPrice: nil, imageSeed: "brass-02", discountPercent: nil)
-            ]
+            distance: "1.4 km"
+        ),
+        Product(
+            name: "Engraved Brass Tray",
+            price: "₹1,050",
+            originalPrice: nil,
+            imageSeed: "engraved_brass_tray",
+            discountPercent: nil,
+            category: .handicrafts,
+            originVillage: "Moradabad, Uttar Pradesh",
+            rating: 4.9,
+            ratingCount: "410",
+            etaText: "35-45 min",
+            discountBadge: nil,
+            description: "Hand-cast brass diyas with etched floral motifs, polished by hand and finished with a protective lacquer coat.",
+            distance: "1.4 km"
         )
     ]
 
-    static func highlights(for category: LocalCategory) -> [PopularHighlight] {
-        sellers
-            .filter { $0.category == category }
-            .compactMap { seller in
-                guard let firstProduct = seller.products.first else { return nil }
-                return PopularHighlight(product: firstProduct, seller: seller)
-            }
+    private static let productsByCategory: [LocalCategory: [Product]] = Dictionary(grouping: products, by: \.category)
+
+    static func allItems(for category: LocalCategory) -> [Product] {
+        productsByCategory[category] ?? []
     }
+
+    static func recommendations(for product: Product, limit: Int = 6) -> [Product] {
+        Array(products.filter { $0.category == product.category && $0.id != product.id }.prefix(limit))
+    }
+
+    static let seasonalHighlights: [SeasonalHighlight] = {
+        func highlight(
+            productName: String,
+            badge: String,
+            title: String,
+            subtitle: String,
+            windowValue: String,
+            priceLabel: String = "farmgate price"
+        ) -> SeasonalHighlight? {
+            guard let product = products.first(where: { $0.name == productName }) else { return nil }
+            return SeasonalHighlight(
+                badge: badge,
+                title: title,
+                subtitle: subtitle,
+                imageSeed: product.imageSeed,
+                category: product.category,
+                rating: product.rating,
+                ratingCount: product.ratingCount,
+                windowLabel: product.category == .handicrafts ? "craft time" : "harvest window",
+                windowValue: windowValue,
+                priceLabel: priceLabel,
+                priceValue: product.category == .handicrafts ? product.price : "\(product.price)/kg",
+                product: product
+            )
+        }
+
+        return [
+            highlight(
+                productName: "Alphonso Mangoes",
+                badge: "Trending",
+                title: "Malihabad Alphonso Mangoes",
+                subtitle: "Ripened on the tree in UP's mango belt",
+                windowValue: "Apr – Jun"
+            ),
+            highlight(
+                productName: "Farm Tomatoes",
+                badge: "Popular",
+                title: "Sonipat Farm Tomatoes",
+                subtitle: "Picked at dawn from a no-spray kitchen garden",
+                windowValue: "Year-round"
+            ),
+            highlight(
+                productName: "Blue Pottery Bowl Set",
+                badge: "Featured",
+                title: "Jaipur Blue Pottery",
+                subtitle: "Hand-thrown and fired in a wood kiln",
+                windowValue: "3–5 days",
+                priceLabel: "starting price"
+            )
+        ].compactMap { $0 }
+    }()
 }

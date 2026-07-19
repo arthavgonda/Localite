@@ -1,117 +1,153 @@
-//
-//  Roottabview.swift
-//  localite
-//
-//  Created by ANOOP on 18/07/26.
-//
-
 import SwiftUI
+import MapKit
 
 struct RemoteImage: View {
     let seed: String
     var width: Int = 600
     var height: Int = 400
 
+    @StateObject private var loader = ImageLoader()
+
+    private var localImage: UIImage? {
+        UIImage(named: seed)
+    }
+
     private var url: URL? {
         URL(string: "https://picsum.photos/seed/\(seed)/\(width)/\(height)")
     }
 
     var body: some View {
-        AsyncImage(url: url) { phase in
-            switch phase {
-            case .success(let image):
-                image
+        ZStack {
+            if let localImage {
+                Image(uiImage: localImage)
                     .resizable()
-                    .scaledToFill()
-            case .failure:
-                ZStack {
-                    Color.primary.opacity(0.06)
+            } else {
+                switch loader.state {
+                case .loaded:
+                    if let uiImage = loader.image {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                    }
+                case .failed:
+                    Color.black.opacity(0.06)
                     Image(systemName: "photo")
                         .foregroundStyle(.tertiary)
-                }
-            default:
-                ZStack {
-                    Color.primary.opacity(0.06)
+                case .idle, .loading:
+                    Color.black.opacity(0.06)
                     ProgressView()
                 }
             }
         }
+        .task(id: url) {
+            guard localImage == nil else { return }
+            loader.load(url: url)
+        }
     }
+}
+
+enum AppRoute: Hashable {
+    case explore
 }
 
 struct RootTabView: View {
     @StateObject private var nav = AppNavigation()
+    @StateObject private var cart = CartStore()
+    @StateObject private var exploreViewModel = ExploreViewModel()
+    @StateObject private var locationStore = LocationStore()
+
+    @Namespace private var heroNamespace
+    @State private var path = NavigationPath()
 
     var body: some View {
-        ZStack {
-            TabView {
-                HomeView()
-                    .tabItem {
-                        Label("Home", systemImage: "house.fill")
+        NavigationStack(path: $path) {
+            HomeView()
+                .overlay(alignment: .bottomTrailing) {
+                    Button {
+                        path.append(AppRoute.explore)
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "train.side.rear.car")
+                            Text("Rail Local")
+                        }
+                        .font(.subheadline.weight(.bold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 14)
+                        .background(LocaliteTheme.ink, in: Capsule())
+                        .shadow(color: .black.opacity(0.2), radius: 12, y: 6)
                     }
-
-                PlaceholderTabView(title: "Stores", icon: "storefront.fill")
-                    .tabItem {
-                        Label("Stores", systemImage: "storefront.fill")
+                    .buttonStyle(.plain)
+                    .padding(.trailing, 20)
+                    .padding(.bottom, 20)
+                }
+                .navigationDestination(for: AppRoute.self) { route in
+                    switch route {
+                    case .explore:
+                        exploreDestination
                     }
-
-                PlaceholderTabView(title: "Search", icon: "magnifyingglass")
-                    .tabItem {
-                        Label("Search", systemImage: "magnifyingglass")
-                    }
-
-                PlaceholderTabView(title: "Orders", icon: "bag.fill")
-                    .tabItem {
-                        Label("Orders", systemImage: "bag.fill")
-                    }
-
-                PlaceholderTabView(title: "Account", icon: "person.crop.circle.fill")
-                    .tabItem {
-                        Label("Account", systemImage: "person.crop.circle.fill")
-                    }
-            }
-            .tint(.primary)
-            .environmentObject(nav)
-
-            if let seller = nav.selectedSeller {
+                }
+        }
+        .environmentObject(nav)
+        .environmentObject(cart)
+        .environmentObject(locationStore)
+        .environment(\.heroNamespace, heroNamespace)
+        .overlay {
+            if let product = nav.selectedProduct {
                 Color.black.opacity(0.3)
                     .ignoresSafeArea()
                     .onTapGesture { closeDetail() }
                     .transition(.opacity)
 
-                SellerDetailView(seller: seller, onClose: closeDetail)
+                ProductDetailView(product: product, sourceID: nav.selectedSourceID, onClose: closeDetail)
                     .ignoresSafeArea()
-                    .transition(.asymmetric(
-                        insertion: .opacity.combined(with: .scale(scale: 0.97)),
-                        removal: .opacity
-                    ))
+                    .environmentObject(cart)
+                    .environment(\.heroNamespace, heroNamespace)
+                    .transition(.opacity)
                     .zIndex(1)
             }
         }
     }
 
+    private var exploreDestination: some View {
+        ExploreView(viewModel: exploreViewModel, onBack: goHome)
+            .environmentObject(locationStore)
+            .overlay(alignment: .topTrailing) {
+                Button {
+                    if let coord = locationStore.liveCoordinate ?? (locationStore.selected.isLive ? locationStore.selected.coordinate : nil) {
+                        withAnimation {
+                            exploreViewModel.position = .region(MKCoordinateRegion(
+                                center: coord,
+                                latitudinalMeters: 1000,
+                                longitudinalMeters: 1000
+                            ))
+                        }
+                    } else {
+                        exploreViewModel.recenterOnUser()
+                    }
+                } label: {
+                    Image(systemName: "location.fill")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundStyle(LocaliteTheme.ink)
+                        .frame(width: 44, height: 44)
+                        .background(Color.white, in: Circle())
+                        .overlay(Circle().strokeBorder(Color.black.opacity(0.06), lineWidth: 0.5))
+                        .shadow(color: .black.opacity(0.14), radius: 10, y: 4)
+                }
+                .buttonStyle(.plain)
+                .padding(.trailing, 16)
+                .padding(.top, 8)
+            }
+    }
+
+    private func goHome() {
+        exploreViewModel.goHome()
+        path.removeLast()
+    }
+
     private func closeDetail() {
         withAnimation(.spring(response: 0.5, dampingFraction: 0.88)) {
-            nav.selectedSeller = nil
-        }
-    }
-}
-
-private struct PlaceholderTabView: View {
-    let title: String
-    let icon: String
-
-    var body: some View {
-        ZStack {
-            Color(.systemGroupedBackground).ignoresSafeArea()
-            VStack(spacing: 14) {
-                Image(systemName: icon)
-                    .font(.system(size: 40))
-                    .foregroundStyle(.secondary)
-                Text("\(title) coming soon")
-                    .font(.headline)
-                    .foregroundStyle(.secondary)
-            }
+            nav.selectedProduct = nil
+            nav.selectedSourceID = nil
         }
     }
 }
