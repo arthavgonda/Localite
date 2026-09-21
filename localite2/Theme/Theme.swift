@@ -78,7 +78,6 @@ struct Theme {
         return LinearGradient(colors: colors, startPoint: .topLeading, endPoint: .bottomTrailing)
     }
 }
-
 extension View {
     func theme(_ colorScheme: ColorScheme) -> Theme { Theme(colorScheme: colorScheme) }
 }
